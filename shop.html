@@ -17,8 +17,8 @@
       <span class="logo-text">ALEKO</span>
     </a>
     <nav class="nav-links">
-      <a href="/index.html">Home</a>
-      <a href="/shop.html" class="active">Shop</a>
+      <a href="index.html">Home</a>
+      <a href="shop.html" class="active">Shop</a>
       <a href="#">Sale</a>
       <a href="#">Blog</a>
       <a href="#">Showcase</a>
@@ -37,17 +37,6 @@
     </div>
   </header>
 
-  <!-- SHOP HERO -->
-  <section class="shop-hero">
-    <div class="shop-hero-eyebrow">
-      <span class="dot"></span>
-      Custom Clothing — Season 2025
-      <span class="dot"></span>
-    </div>
-    <h1>Design it <em>yours,</em><br>wear it loud</h1>
-    <p>Every piece is a blank canvas. Choose a base, make it yours — your design, your fit, your statement.</p>
-  </section>
-
   <!-- FILTER BAR -->
   <div class="filter-bar">
     <div class="filter-inner">
@@ -61,12 +50,19 @@
       </div>
       <div class="filter-right">
         <span class="result-count" id="resultCount">12 items</span>
-        <select class="sort-select" id="sortSelect">
-          <option value="featured">Featured</option>
-          <option value="newest">Newest</option>
-          <option value="price-asc">Price: Low → High</option>
-          <option value="price-desc">Price: High → Low</option>
-        </select>
+        <!-- Custom dropdown -->
+        <div class="custom-select" id="customSelect">
+          <button class="custom-select-trigger" id="selectTrigger">
+            <span id="selectLabel">Featured</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e8ff47" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="custom-select-dropdown" id="selectDropdown">
+            <div class="custom-select-option active" data-value="featured">Featured</div>
+            <div class="custom-select-option" data-value="newest">Newest</div>
+            <div class="custom-select-option" data-value="price-asc">Price: Low → High</div>
+            <div class="custom-select-option" data-value="price-desc">Price: High → Low</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
