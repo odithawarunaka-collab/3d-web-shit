@@ -7,35 +7,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="shop.css">
+  <link rel="stylesheet" href="auth.css">
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <header class="navbar">
-    <a href="index.html" class="logo">
-      <span class="logo-icon">◈</span>
-      <span class="logo-text">ALEKO</span>
-    </a>
-    <nav class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="shop.html" class="active">Shop</a>
-      <a href="#">Sale</a>
-      <a href="#">Blog</a>
-      <a href="#">Showcase</a>
-    </nav>
-    <div class="nav-actions">
-      <button class="cart-button" id="cartBtn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-          <line x1="3" y1="6" x2="21" y2="6"/>
-          <path d="M16 10a4 4 0 01-8 0"/>
-        </svg>
-        <span class="cart-count" id="cartCount">0</span>
-      </button>
-      <button class="login-button">Login</button>
-      <button class="signup-button">Sign Up</button>
-    </div>
-  </header>
+  <!-- SHARED NAVBAR -->
+  <div id="navbar"></div>
+
+  <!-- AUTH MODAL -->
+  <div id="authModal"></div>
 
   <!-- FILTER BAR -->
   <div class="filter-bar">
@@ -50,7 +30,6 @@
       </div>
       <div class="filter-right">
         <span class="result-count" id="resultCount">12 items</span>
-        <!-- Custom dropdown -->
         <div class="custom-select" id="customSelect">
           <button class="custom-select-trigger" id="selectTrigger">
             <span id="selectLabel">Featured</span>
@@ -80,9 +59,7 @@
     </div>
     <div class="banner-action">
       <button class="banner-btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
         Start Customizing
       </button>
       <button class="banner-btn-secondary">See how it works →</button>
@@ -98,6 +75,7 @@
     <span class="footer-note">© 2025 ALEKO — Wear your vision.</span>
   </footer>
 
-  <script type="module" src="./shop.js"></script>
+  <script type="module" src="navbar.js"></script>
+  <script type="module" src="shop.js"></script>
 </body>
 </html>
