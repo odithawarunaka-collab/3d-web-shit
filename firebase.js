@@ -8,6 +8,14 @@ import {
   signOut,
   onAuthStateChanged
 } from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  onSnapshot
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-WY_vQ731f0k_fcCGBPxWmjenNxz0iQ4",
@@ -19,8 +27,9 @@ const firebaseConfig = {
   measurementId: "G-PLEPH2E8KE"
 };
 
-const app = initializeApp(firebaseConfig);
+const app        = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db   = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
 
 export {
@@ -28,5 +37,10 @@ export {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  onSnapshot
 };

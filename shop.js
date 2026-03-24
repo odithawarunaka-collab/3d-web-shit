@@ -1,3 +1,5 @@
+import { addToCart } from "./cart.js";
+
 // ── Product data ─────────────────────────────────────────────────────────────
 const products = [
   {
@@ -94,8 +96,10 @@ const badgeLabels = {
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let cartCount   = 0;
 let activeFilter = "all";
+
+// ── Expose handleAddToCart globally for inline onclick ────────────────────────
+window.handleAddToCart = handleAddToCart;
 
 // ── Card HTML builder ─────────────────────────────────────────────────────────
 function buildCardHTML(p, index) {
@@ -114,7 +118,7 @@ function buildCardHTML(p, index) {
           </svg>
         </button>
         <div class="card-overlay">
-          <button class="card-overlay-btn" onclick="addToCart(event)">
+          <button class="card-overlay-btn" onclick="handleAddToCart(event, ${p.id})">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
@@ -143,10 +147,8 @@ function buildCardHTML(p, index) {
 function renderProducts(filter = "all") {
   const grid     = document.getElementById("productGrid");
   const filtered = filter === "all" ? products : products.filter(p => p.category === filter);
-
   document.getElementById("resultCount").textContent =
     `${filtered.length} item${filtered.length !== 1 ? "s" : ""}`;
-
   grid.innerHTML = filtered.map((p, i) => buildCardHTML(p, i)).join("");
 }
 
@@ -157,15 +159,27 @@ function toggleWishlist(btn) {
 }
 
 // ── Add to cart ───────────────────────────────────────────────────────────────
-function addToCart(e) {
+async function handleAddToCart(e, productId) {
   e.stopPropagation();
-  cartCount++;
-  document.getElementById("cartCount").textContent = cartCount;
+  const product = products.find(p => p.id === productId);
+  if (!product) return;
 
   const btn = e.currentTarget;
+  btn.disabled = true;
+  btn.textContent = "Adding...";
+
+  // Use first color as default selected color
+  await addToCart({
+    id:       product.id,
+    name:     product.name,
+    price:    product.price,
+    color:    product.colors[0],
+    label:    product.label,
+    gradient: product.gradient,
+  });
+
   btn.textContent = "✓ Added!";
   btn.style.background = "#22c55e";
-
   setTimeout(() => {
     btn.innerHTML = `
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -174,6 +188,7 @@ function addToCart(e) {
       Customize & Add
     `;
     btn.style.background = "";
+    btn.disabled = false;
   }, 1400);
 }
 
@@ -201,16 +216,12 @@ selectTrigger.addEventListener("click", (e) => {
 selectDropdown.addEventListener("click", (e) => {
   const option = e.target.closest(".custom-select-option");
   if (!option) return;
-
   const val = option.dataset.value;
-
-  // Update label and active state
   selectLabel.textContent = option.textContent;
   document.querySelectorAll(".custom-select-option").forEach(o => o.classList.remove("active"));
   option.classList.add("active");
   customSelect.classList.remove("open");
 
-  // Sort logic
   const filtered = activeFilter === "all"
     ? [...products]
     : products.filter(p => p.category === activeFilter);
@@ -223,16 +234,7 @@ selectDropdown.addEventListener("click", (e) => {
     filtered.map((p, i) => buildCardHTML(p, i)).join("");
 });
 
-// Close dropdown when clicking outside
 document.addEventListener("click", () => customSelect.classList.remove("open"));
-
-// ── Navbar scroll effect ──────────────────────────────────────────────────────
-window.addEventListener("scroll", () => {
-  const nb = document.querySelector(".navbar");
-  nb.style.background = window.scrollY > 20
-    ? "rgba(10,10,10,0.92)"
-    : "rgba(10,10,10,0.75)";
-});
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 renderProducts();
