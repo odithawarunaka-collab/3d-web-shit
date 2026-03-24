@@ -305,6 +305,5 @@ onAuthStateChanged(auth, (user) => {
     }
   }
 });
--e 
 // ── Init cart drawer ──────────────────────────────────────────────────────────
 injectCartDrawer();

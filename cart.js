@@ -1,94 +1,94 @@
-import { auth, db, doc, getDoc, setDoc, onSnapshot, onAuthStateChanged } from "./firebase.js";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
+import { initializeApp, getApps } from "firebase/app";
 
-// ── Cart state ────────────────────────────────────────────────────────────────
-let cartItems    = [];   // live array of { id, name, price, color, qty, label, gradient }
-let unsubscribe  = null; // Firestore listener cleanup
-let currentUser  = null;
+const firebaseConfig = {
+  apiKey: "AIzaSyD-WY_vQ731f0k_fcCGBPxWmjenNxz0iQ4",
+  authDomain: "aleko-5cb62.firebaseapp.com",
+  projectId: "aleko-5cb62",
+  storageBucket: "aleko-5cb62.firebasestorage.app",
+  messagingSenderId: "667088576013",
+  appId: "1:667088576013:web:0ef265ed89de465a423f44"
+};
 
-// ── Firestore helpers ─────────────────────────────────────────────────────────
+const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let cartItems   = [];
+let currentUser = null;
+let unsubCart   = null;
+
+// ── Firestore ─────────────────────────────────────────────────────────────────
 function cartRef(uid) {
   return doc(db, "carts", uid);
 }
-
-async function saveCart(items) {
+async function saveCart() {
   if (!currentUser) return;
-  await setDoc(cartRef(currentUser.uid), { items });
+  await setDoc(cartRef(currentUser.uid), { items: cartItems });
 }
 
-// ── Listen to auth — load/unload cart on login/logout ─────────────────────────
+// ── Auth listener ─────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
-
-  // Unsubscribe previous listener
-  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  if (unsubCart) { unsubCart(); unsubCart = null; }
 
   if (user) {
-    // Real-time listener — cart updates instantly across tabs/devices
-    unsubscribe = onSnapshot(cartRef(user.uid), (snap) => {
+    unsubCart = onSnapshot(cartRef(user.uid), (snap) => {
       cartItems = snap.exists() ? (snap.data().items || []) : [];
       renderCart();
       updateCartCount();
     });
   } else {
-    // Logged out — clear cart display
     cartItems = [];
     renderCart();
     updateCartCount();
   }
 });
 
-// ── Add item to cart ──────────────────────────────────────────────────────────
+// ── Add to cart ───────────────────────────────────────────────────────────────
 export async function addToCart(product) {
   if (!currentUser) {
-    // Not logged in — open auth modal
     document.getElementById("authOverlay")?.classList.add("open");
     return;
   }
-
   const existing = cartItems.find(i => i.id === product.id && i.color === product.color);
   if (existing) {
     existing.qty += 1;
   } else {
     cartItems.push({ ...product, qty: 1 });
   }
-
-  await saveCart(cartItems);
+  await saveCart();
   openCart();
 }
 
-// ── Remove item ───────────────────────────────────────────────────────────────
+// ── Remove / update ───────────────────────────────────────────────────────────
 async function removeItem(id, color) {
   cartItems = cartItems.filter(i => !(i.id === id && i.color === color));
-  await saveCart(cartItems);
+  await saveCart();
 }
-
-// ── Update quantity ───────────────────────────────────────────────────────────
 async function updateQty(id, color, delta) {
   const item = cartItems.find(i => i.id === id && i.color === color);
   if (!item) return;
   item.qty += delta;
-  if (item.qty <= 0) {
-    cartItems = cartItems.filter(i => !(i.id === id && i.color === color));
-  }
-  await saveCart(cartItems);
+  if (item.qty <= 0) cartItems = cartItems.filter(i => !(i.id === id && i.color === color));
+  await saveCart();
 }
-
-// ── Clear cart ────────────────────────────────────────────────────────────────
 async function clearCart() {
   cartItems = [];
-  await saveCart([]);
+  await saveCart();
 }
 
-// ── Cart count badge ──────────────────────────────────────────────────────────
+// ── Cart count ────────────────────────────────────────────────────────────────
 function updateCartCount() {
   const total = cartItems.reduce((sum, i) => sum + i.qty, 0);
-  document.querySelectorAll(".cart-count").forEach(el => {
-    el.textContent = total;
-    el.style.display = total > 0 ? "flex" : "flex";
-  });
+  const els   = document.querySelectorAll(".cart-count");
+  if (els.length === 0) { setTimeout(updateCartCount, 100); return; }
+  els.forEach(el => { el.textContent = total; });
 }
 
-// ── Open / close cart drawer ──────────────────────────────────────────────────
+// ── Open / close ──────────────────────────────────────────────────────────────
 export function openCart() {
   document.getElementById("cartDrawer")?.classList.add("open");
   document.getElementById("cartBackdrop")?.classList.add("open");
@@ -98,22 +98,21 @@ function closeCart() {
   document.getElementById("cartBackdrop")?.classList.remove("open");
 }
 
-// ── Render cart drawer ────────────────────────────────────────────────────────
+// ── Render ────────────────────────────────────────────────────────────────────
 function renderCart() {
-  const body    = document.getElementById("cartBody");
-  const footer  = document.getElementById("cartFooter");
-  if (!body) return;
+  const body   = document.getElementById("cartBody");
+  const footer = document.getElementById("cartFooter");
+  if (!body || !footer) { setTimeout(renderCart, 100); return; }
 
   if (!currentUser) {
     body.innerHTML = `
       <div class="cart-empty">
         <div class="cart-empty-icon">🔒</div>
         <p>Sign in to view your cart</p>
-        <button class="cart-signin-btn" onclick="document.getElementById('authOverlay').classList.add('open'); closeCartDrawer()">
+        <button class="cart-signin-btn" onclick="document.getElementById('authOverlay').classList.add('open');closeCartDrawer()">
           Sign In
         </button>
-      </div>
-    `;
+      </div>`;
     footer.style.display = "none";
     return;
   }
@@ -130,8 +129,7 @@ function renderCart() {
         </div>
         <p>Your cart is empty</p>
         <span>Add something to get started</span>
-      </div>
-    `;
+      </div>`;
     footer.style.display = "none";
     return;
   }
@@ -141,7 +139,7 @@ function renderCart() {
   const total    = subtotal + shipping;
 
   body.innerHTML = cartItems.map(item => `
-    <div class="cart-item" data-id="${item.id}" data-color="${item.color}">
+    <div class="cart-item">
       <div class="cart-item-image" style="background:${item.gradient}">
         <span class="cart-item-label">${item.label}</span>
       </div>
@@ -175,17 +173,15 @@ function renderCart() {
   footer.innerHTML = `
     <div class="cart-summary">
       <div class="cart-summary-row">
-        <span>Subtotal</span>
-        <span>$${subtotal.toFixed(2)}</span>
+        <span>Subtotal</span><span>$${subtotal.toFixed(2)}</span>
       </div>
       <div class="cart-summary-row">
         <span>Shipping</span>
         <span>${shipping === 0 ? '<em>Free</em>' : '$' + shipping.toFixed(2)}</span>
       </div>
-      ${shipping > 0 ? `<div class="cart-free-shipping">Add $${(100 - subtotal).toFixed(2)} more for free shipping</div>` : ''}
+      ${shipping > 0 ? `<div class="cart-free-shipping">Add $${(100 - subtotal).toFixed(2)} more for free shipping</div>` : ""}
       <div class="cart-summary-row total">
-        <span>Total</span>
-        <span>$${total.toFixed(2)}</span>
+        <span>Total</span><span>$${total.toFixed(2)}</span>
       </div>
     </div>
     <button class="cart-checkout-btn">
@@ -196,13 +192,13 @@ function renderCart() {
   `;
 }
 
-// ── Global functions (called from inline onclick) ─────────────────────────────
-window.cartQty       = (id, color, delta) => updateQty(id, color, delta);
-window.cartRemove    = (id, color)        => removeItem(id, color);
-window.cartClearAll  = ()                 => clearCart();
+// ── Global window functions for inline onclick ────────────────────────────────
+window.cartQty        = (id, color, delta) => updateQty(id, color, delta);
+window.cartRemove     = (id, color)        => removeItem(id, color);
+window.cartClearAll   = ()                 => clearCart();
 window.closeCartDrawer = closeCart;
 
-// ── Inject cart drawer HTML into page ─────────────────────────────────────────
+// ── Inject drawer into DOM ────────────────────────────────────────────────────
 export function injectCartDrawer() {
   if (document.getElementById("cartDrawer")) return;
 
@@ -225,7 +221,7 @@ export function injectCartDrawer() {
     </div>
   `);
 
-  // Cart button opens drawer
+  // Open cart on navbar button click
   document.addEventListener("click", (e) => {
     if (e.target.closest(".cart-button")) openCart();
   });
